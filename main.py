@@ -1,14 +1,14 @@
 from create_population import create_population
-from fitness_functions import aluffi_pentini, three_camel_back
+from fitness_functions import aluffi_pentini, format_decimals, three_camel_back
 from config_type import FunctionConfig
 from selection import crossover, mutate, selection
 
 # =========================
 # CONFIGURAÇÕES
 # =========================
-POP_SIZE = 100
+POP_SIZE = 50
 GENERATIONS = 200
-MUTATION_RATE = 0.1
+MUTATION_RATE = 0.3
 FUNCTIONS_CONFIG = {
     "AP": FunctionConfig(func=aluffi_pentini, bounds=(-10, 10), optimum=-0.3523, n=2),
     "CB3": FunctionConfig(func=three_camel_back, bounds=(-5, 5), optimum=0.0, n=2),
@@ -21,11 +21,24 @@ def genetic_algorithm(
 ):
     population = create_population(pop_size, function_config.bounds, function_config.n)
     fitness = function_config.func
-    best = None
+    best_fitness = 0
+    best_continous_count = 0
 
     for gen in range(generations):
-        new_population = []
+        best_gen_fitness = evaluate(
+            min(population, key=lambda ind: evaluate(ind, fitness)), fitness
+        )
 
+        if gen == 0 or best_gen_fitness < best_fitness:
+            best_fitness = best_gen_fitness
+            best_continous_count = 0
+        else:
+            best_continous_count += 1
+
+        if best_continous_count >= 10:
+            break
+
+        new_population = []
         for _ in range(pop_size):
             p1 = selection(population, fitness)
             p2 = selection(population, fitness)
@@ -36,18 +49,16 @@ def genetic_algorithm(
             new_population.append(child)
 
         population = new_population
-        best = min(population, key=lambda ind: evaluate(ind, fitness))
 
-    return best, fitness(best)
+    return best_fitness
 
 
 def success_rate(function_config: FunctionConfig, runs=100):
     successes = 0
 
     for _ in range(runs):
-        best, value = genetic_algorithm(
-            POP_SIZE, GENERATIONS, function_config, MUTATION_RATE
-        )
+        value = genetic_algorithm(POP_SIZE, GENERATIONS, function_config, MUTATION_RATE)
+        print(value)
 
         if abs(value - function_config.optimum) < 0.01:
             successes += 1
