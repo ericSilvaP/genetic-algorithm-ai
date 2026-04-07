@@ -45,14 +45,14 @@ def crossover(p1, p2):
 # =========================
 # MUTAÇÃO
 # =========================
-def mutate(ind):
-    if random.random() < MUTATION_RATE:
+def mutate(ind, mutation_rate, bounds):
+    if random.random() < mutation_rate:
         ind[0] += random.uniform(-0.1, 0.1)
         ind[1] += random.uniform(-0.1, 0.1)
 
     # manter dentro dos limites
-    ind[0] = max(min(ind[0], BOUNDS[1]), BOUNDS[0])
-    ind[1] = max(min(ind[1], BOUNDS[1]), BOUNDS[0])
+    ind[0] = max(min(ind[0], bounds[1]), bounds[0])
+    ind[1] = max(min(ind[1], bounds[1]), bounds[0])
 
     return ind
 
@@ -60,7 +60,9 @@ def mutate(ind):
 # =========================
 # ALGORITMO GENÉTICO
 # =========================
-def genetic_algorithm(pop_size, generations, function_config: FunctionConfig):
+def genetic_algorithm(
+    pop_size, generations, function_config: FunctionConfig, mutation_rate
+):
     population = create_population(pop_size, function_config.bounds)
     fitness = function_config.func
 
@@ -72,7 +74,7 @@ def genetic_algorithm(pop_size, generations, function_config: FunctionConfig):
             p2 = selection(population, fitness)
 
             child = crossover(p1, p2)
-            child = mutate(child)
+            child = mutate(child, mutation_rate, function_config.bounds)
 
             new_population.append(child)
 
@@ -85,6 +87,8 @@ def genetic_algorithm(pop_size, generations, function_config: FunctionConfig):
 # =========================
 # EXECUÇÃO
 # =========================
-best, value = genetic_algorithm(POP_SIZE, GENERATIONS, FUNCTIONS_CONFIG["AP"])
+best, value = genetic_algorithm(
+    POP_SIZE, GENERATIONS, FUNCTIONS_CONFIG["AP"], MUTATION_RATE
+)
 print("Melhor solução:", best)
 print("Valor:", value)
