@@ -1,111 +1,65 @@
+from config_type import Individual
+from metrics import Metrics
 from create_population import create_population
-from config_type import FUNCTIONS_CONFIG, FunctionConfig
-from selection import crossover, mutate, selection
-
-NFE = 0
+from selection import selection, crossover, mutate
 
 
-def genetic_algorithm(
-    pop_size,
-    generations,
-    function_config: FunctionConfig,
-    mutation_rate=None,
-    best_fit_stop_count=10,
-):
-    population = create_population(pop_size, function_config.bounds, function_config.n)
-    fitness = function_config.func
-    best_fitness = 0
-    best_continous_count = 0
+def genetic_algorithm(pop_size, generations, config, mutation_rate, stop_count):
+    metrics = Metrics()
+    population = create_population(pop_size, config.bounds, config.n)
+    fitness = config.func
 
-    for gen in range(generations):
-        best_gen_fitness = evaluate(
-            min(population, key=lambda ind: evaluate(ind, fitness)), fitness
-        )
+    best_fitness = float("inf")
+    stagnation_count = 0
 
-        if gen == 0 or best_gen_fitness < best_fitness:
+    for _ in range(generations):
+        population = [
+            Individual(ind, metrics.evaluate(ind, fitness)) for ind in population
+        ]
+        best_ind = min(population, key=lambda ind: ind.fitness)
+        best_gen_fitness = best_ind.fitness
+
+        if best_gen_fitness < best_fitness:
             best_fitness = best_gen_fitness
-            best_continous_count = 0
+            stagnation_count = 0
         else:
-            best_continous_count += 1
+            stagnation_count += 1
 
-        if best_continous_count >= best_fit_stop_count:
+        if stagnation_count >= stop_count:
             break
 
-        # Gerar nova população
         new_population = []
+
         for _ in range(pop_size):
-            p1 = selection(population, fitness)
-            p2 = selection(population, fitness)
+            p1 = selection(population, lambda ind: ind.fitness).genes
+            p2 = selection(population, lambda ind: ind.fitness).genes
 
             child = crossover(p1, p2)
+
             if mutation_rate:
-                child = mutate(child, mutation_rate, function_config.bounds)
+                child = mutate(child, mutation_rate, config.bounds)
 
             new_population.append(child)
 
         population = new_population
 
-    return best_fitness
+    return best_fitness, metrics.nfe
 
 
 def success_rate(
-    function_config: FunctionConfig,
-    pop_size,
-    generations,
-    best_fit_stop_count,
-    runs=100,
-    mutation_rate=None,
+    config, pop_size, generations, stop_count, runs=100, mutation_rate=None
 ):
     successes = 0
+    total_nfe = 0
 
     for _ in range(runs):
-        value = genetic_algorithm(
-            pop_size, generations, function_config, mutation_rate, best_fit_stop_count
+        best, nfe = genetic_algorithm(
+            pop_size, generations, config, mutation_rate, stop_count
         )
 
-        if abs(value - function_config.optimum) < 0.01:
+        total_nfe += nfe
+
+        if abs(best - config.optimum) < 0.01:
             successes += 1
 
-    return (successes / runs) * 100
-
-
-def evaluate(ind, fitness):
-    global NFE
-    NFE += 1
-    return fitness(ind)
-
-
-# Aluffi
-POP_SIZE = 50
-GENERATIONS = 200
-MUTATION_RATE = 0.3
-BEST_FIT_STOP_COUNT = 25
-
-runs = 100
-sr = success_rate(
-    FUNCTIONS_CONFIG["AP"],
-    POP_SIZE,
-    GENERATIONS,
-    BEST_FIT_STOP_COUNT,
-    runs=runs,
-    mutation_rate=MUTATION_RATE,
-)
-print(f"Taxa de sucesso AP: {sr}%")
-print("NFE:", round(NFE / runs))
-
-# Camel Back 3
-POP_SIZE = 50
-GENERATIONS = 200
-BEST_FIT_STOP_COUNT = 5
-NFE = 0
-
-runs = 100
-sr = success_rate(
-    FUNCTIONS_CONFIG["CB3"],
-    POP_SIZE,
-    GENERATIONS,
-    BEST_FIT_STOP_COUNT,
-    runs=runs,
-)
-print(f"Taxa de sucesso CB3: {sr}%")
-print("NFE:", round(NFE / runs))
+    return (successes / runs) * 100, total_nfe / runs

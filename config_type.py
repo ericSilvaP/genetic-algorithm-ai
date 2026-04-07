@@ -12,6 +12,12 @@ class FunctionConfig:
     n: int
 
 
+@dataclass
+class Individual:
+    genes: list
+    fitness: float
+
+
 FUNCTIONS_CONFIG = {
     "AP": FunctionConfig(func=aluffi_pentini, bounds=(-10, 10), optimum=-0.3523, n=2),
     "CB3": FunctionConfig(func=three_camel_back, bounds=(-5, 5), optimum=0.0, n=2),
