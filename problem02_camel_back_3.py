@@ -4,7 +4,7 @@ from genetic_alg import success_rate
 
 POP_SIZE = 50
 GENERATIONS = 200
-STOP_COUNT = 15
+STOP_COUNT = 5
 
 sr, avg_nfe = success_rate(FUNCTIONS_CONFIG["CB3"], POP_SIZE, GENERATIONS, STOP_COUNT)
 

@@ -16,11 +16,10 @@ def crossover(p1, p2):
 
 
 def mutate(ind, mutation_rate, bounds):
-    if random.random() < mutation_rate:
-        ind[0] += random.uniform(-0.1, 0.1)
-        ind[1] += random.uniform(-0.1, 0.1)
+    for i in range(len(ind)):
+        if random.random() < mutation_rate:
+            ind[i] += random.gauss(0, 0.1)
 
-    ind[0] = format_decimals(max(min(ind[0], bounds[1]), bounds[0]))
-    ind[1] = format_decimals(max(min(ind[1], bounds[1]), bounds[0]))
+        ind[i] = format_decimals(max(min(ind[i], bounds[1]), bounds[0]))
 
     return ind

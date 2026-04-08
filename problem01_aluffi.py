@@ -1,12 +1,13 @@
 from config_type import FUNCTIONS_CONFIG
 from genetic_alg import success_rate
 
-POP_SIZE = 50
-GENERATIONS = 200
+
+POP_SIZE = 100
+GENERATIONS = 750
 STOP_COUNT = 15
 
 sr, avg_nfe = success_rate(
-    FUNCTIONS_CONFIG["AP"], POP_SIZE, GENERATIONS, STOP_COUNT, mutation_rate=0.25
+    FUNCTIONS_CONFIG["AP"], POP_SIZE, GENERATIONS, STOP_COUNT, mutation_rate=0.15
 )
 
 print("--- Aluffi-Pentini ---")
